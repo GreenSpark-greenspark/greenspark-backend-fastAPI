@@ -1,7 +1,5 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from enum import Enum
-import joblib
 from typing import List
 import pandas as pd
 from prophet import Prophet
