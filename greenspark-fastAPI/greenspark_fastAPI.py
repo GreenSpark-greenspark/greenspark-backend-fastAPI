@@ -3,8 +3,17 @@ from pydantic import BaseModel
 from typing import List
 import pandas as pd
 from prophet import Prophet
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class PowerData(BaseModel):
     date: str  # Spring에서 LocalDate 형태로 전달되므로 문자열로 수신
