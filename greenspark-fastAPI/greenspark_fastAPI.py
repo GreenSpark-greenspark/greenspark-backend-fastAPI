@@ -47,6 +47,11 @@ def predict_cost(input_data: List[PowerData]):
     combined_data.interpolate(method='linear', inplace=True)
     combined_data.fillna(combined_data.mean(), inplace=True)
 
+    # 하한값(floor) 및 상한값(cap) 추가
+    current_max = combined_data['y'].max()
+    combined_data['cap'] = current_max * 2
+    combined_data['floor'] = 0
+
     # Prophet 모델 학습
     model = Prophet(
         yearly_seasonality=True,  # 연간 계절성 반영
@@ -59,12 +64,15 @@ def predict_cost(input_data: List[PowerData]):
     if not combined_data[['ds', 'y', 'A', 'B', 'C', 'D', 'E', 'F', 'G']].isnull().any().any():
         model.fit(combined_data[['ds', 'y', 'A', 'B', 'C', 'D', 'E', 'F', 'G']])
 
-        # 미래 예측 (1개월만 예측)
+        # 미래 예측
         future = combined_data[['ds', 'A', 'B', 'C', 'D', 'E', 'F', 'G']].iloc[[-1]].copy()
         future['ds'] = future['ds'] + pd.DateOffset(months=1)
+        future['cap'] = combined_data['cap'].iloc[-1]  
+        future['floor'] = combined_data['floor'].iloc[-1]
 
         # 예측 수행
         forecast = model.predict(future)
+        forecast['yhat'] = forecast['yhat'].apply(lambda x: max(x, 0))  # 후처리로 음수 제거
         # print(forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']])
         # print(forecast[['yhat']])
 
